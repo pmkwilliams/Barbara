@@ -1,0 +1,63 @@
+checkpoints:
+  - id: 1
+    name: "Types, Config & Rate Limiter"
+    verify: "bunx tsc --noEmit exits clean; bun test packages/shared-platform/test/kalshi/rate-limiter.test.ts passes"
+    status: completed
+    tasks:
+      - id: 1.1
+        description: "Populate KalshiRawMarket in api-types.ts with typed fields (ticker, status, pricing _dollars strings, volume numbers, etc.) and [key: string]: unknown index signature"
+        status: completed
+      - id: 1.2
+        description: "Create kalshi/types.ts with response wrappers (GetMarketsResponse, GetMarketResponse, GetExchangeStatusResponse, KalshiAccountLimits) and GetMarketsParams, importing KalshiRawMarket from ../api-types"
+        status: completed
+        blocked_by: [1.1]
+      - id: 1.3
+        description: "Update core/src/config.ts — remove KALSHI_API_SECRET, add KALSHI_PRIVATE_KEY_PATH (optional) and KALSHI_BASE_URL (with default)"
+        status: completed
+      - id: 1.4
+        description: "Update .env.example — replace KALSHI_API_SECRET with KALSHI_PRIVATE_KEY_PATH and KALSHI_BASE_URL"
+        status: completed
+        blocked_by: [1.3]
+      - id: 1.5
+        description: "Create kalshi/rate-limiter.ts — TokenBucket class with timestamp-based refill, async acquire() that waits when empty, and non-blocking tryAcquire()"
+        status: completed
+      - id: 1.6
+        description: "Create test/kalshi/rate-limiter.test.ts — test capacity depletion, blocking on empty bucket, tryAcquire behavior, and token refill over time"
+        status: completed
+        blocked_by: [1.5]
+
+  - id: 2
+    name: "Auth Module"
+    verify: "bun test packages/shared-platform/test/kalshi/auth.test.ts passes"
+    status: completed
+    blocked_by: [1]
+    tasks:
+      - id: 2.1
+        description: "Create kalshi/auth.ts — KalshiAuth implements PlatformAuthProvider with RSA-PSS signing (crypto.createSign, PSS padding, saltLength DIGEST), getHeaders() returns static KALSHI-ACCESS-KEY, signRequest() builds timestamp+method+path message and returns merged headers"
+        status: completed
+      - id: 2.2
+        description: "Create test/kalshi/auth.test.ts — generate test RSA keypair, verify signature correctness with public key, confirm PSS probabilistic signatures differ, confirm query params stripped from signing path, check all KALSHI-ACCESS-* headers present"
+        status: completed
+        blocked_by: [2.1]
+
+  - id: 3
+    name: "Client & Wiring"
+    verify: "bun test passes (all suites); bunx tsc --noEmit zero errors; bunx eslint . zero errors"
+    status: completed
+    blocked_by: [1, 2]
+    tasks:
+      - id: 3.1
+        description: "Create kalshi/client.ts — KalshiClient with static async create() factory (reads PEM, fetches account limits, creates TokenBuckets), private request<T>() with URL building + read/write bucket classification + retry logic (429/5xx/TypeError, max 3 retries, exponential backoff with jitter), public getExchangeStatus/getMarkets/getMarket methods"
+        status: completed
+      - id: 3.2
+        description: "Create kalshi/index.ts barrel exporting ./auth, ./client, ./rate-limiter, ./types"
+        status: completed
+        blocked_by: [3.1]
+      - id: 3.3
+        description: "Update shared-platform/src/index.ts to add export * from './kalshi'"
+        status: completed
+        blocked_by: [3.2]
+      - id: 3.4
+        description: "Create test/kalshi/client.test.ts — mock globalThis.fetch; test retry on 500, no retry on 400, retry on 429, network error retry, max retries exhausted, query param serialization"
+        status: completed
+        blocked_by: [3.1]

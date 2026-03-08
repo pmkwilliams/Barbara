@@ -1,0 +1,37 @@
+## 0101 — Kalshi REST Client: COMPLETE
+
+All 3 checkpoints completed. All 13 tasks done.
+
+### Checkpoint 1: Types, Config & Rate Limiter ✓
+- Populated KalshiRawMarket with 22 typed fields + index signature
+- Created kalshi/types.ts with 5 response/param types
+- Updated config.ts: removed KALSHI_API_SECRET, added KALSHI_PRIVATE_KEY_PATH + KALSHI_BASE_URL
+- .env.example was already correct
+- Created TokenBucket with timestamp-based refill, acquire(), tryAcquire()
+- 4 rate-limiter tests pass
+
+### Checkpoint 2: Auth Module ✓
+- Created KalshiAuth implementing PlatformAuthProvider
+- RSA-PSS signing with SHA-256, PSS padding, salt length = digest
+- getHeaders() returns static KALSHI-ACCESS-KEY
+- signRequest() builds timestamp+method+path message, returns merged headers
+- 5 auth tests pass (signature verification, PSS probabilistic, query param stripping, headers)
+
+### Checkpoint 3: Client & Wiring ✓
+- Created KalshiClient with static create() factory
+- Private request<T>() with URL building, read/write bucket classification, retry logic
+- Retry on 429/5xx/TypeError, max 3 retries, exponential backoff with jitter
+- Public getExchangeStatus/getMarkets/getMarket methods
+- Barrel exports wired: kalshi/index.ts → shared-platform/src/index.ts
+- 6 client tests pass (retry 500, no retry 400, retry 429, network error, max retries, query params)
+
+### Post-review fixes
+- .env.example: removed real-looking API key UUID, reverted to empty placeholder
+- client.ts create(): use signed.url instead of original limitsUrl for consistency
+- client.ts: refactored to re-sign on each retry attempt (buildHeaders closure) to avoid stale KALSHI-ACCESS-TIMESTAMP on retries
+- rate-limiter.ts: added promise-based queue to serialize concurrent acquire() calls, preventing token overshoot when multiple callers race
+
+### Verification
+- bunx tsc --noEmit: zero errors
+- bun test: 18 pass, 0 fail across 4 files (8s)
+- bunx eslint .: zero errors

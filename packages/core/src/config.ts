@@ -2,7 +2,8 @@ export interface Config {
   DATABASE_PATH: string;
   LOG_LEVEL: string;
   KALSHI_API_KEY: string | undefined;
-  KALSHI_API_SECRET: string | undefined;
+  KALSHI_PRIVATE_KEY_PATH: string | undefined;
+  KALSHI_BASE_URL: string;
   POLYMARKET_API_KEY: string | undefined;
   POLYMARKET_PRIVATE_KEY: string | undefined;
 }
@@ -33,7 +34,8 @@ export const loadConfig = (): Config => {
     DATABASE_PATH: readOptionalEnv("DATABASE_PATH") ?? "./data/barbara.db",
     LOG_LEVEL: readOptionalEnv("LOG_LEVEL") ?? "info",
     KALSHI_API_KEY: readOptionalEnv("KALSHI_API_KEY"),
-    KALSHI_API_SECRET: readOptionalEnv("KALSHI_API_SECRET"),
+    KALSHI_PRIVATE_KEY_PATH: readOptionalEnv("KALSHI_PRIVATE_KEY_PATH"),
+    KALSHI_BASE_URL: readOptionalEnv("KALSHI_BASE_URL") ?? "https://api.elections.kalshi.com/trade-api/v2",
     POLYMARKET_API_KEY: readOptionalEnv("POLYMARKET_API_KEY"),
     POLYMARKET_PRIVATE_KEY: readOptionalEnv("POLYMARKET_PRIVATE_KEY")
   };

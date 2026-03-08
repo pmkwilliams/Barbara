@@ -1,0 +1,23 @@
+[2026-03-06 22:01] Initiated new brief "Project Foundation" - briefs/0001-project-foundation/brief.md
+[2026-03-06 22:18] Completed task 1.1 - Created root package.json with Bun workspaces and required devDependencies.
+[2026-03-06 22:18] Completed task 1.2 - Added strict root tsconfig.json for workspace TypeScript settings.
+[2026-03-06 22:18] Completed task 1.3 - Added flat ESLint config for TypeScript with required ignore patterns.
+[2026-03-06 22:18] Completed task 1.4 - Updated .gitignore with SQLite data and journal file ignores.
+[2026-03-06 22:18] Completed task 1.5 - Created .env.example with all documented environment keys and defaults.
+[2026-03-06 22:19] Completed task 1.6 - Added @barbara/core package manifest and extending tsconfig.
+[2026-03-06 22:20] Completed task 1.7 - Implemented core shared domain enums and base interfaces in core/src/types.ts.
+[2026-03-06 22:20] Completed task 1.8 - Implemented typed environment config loading and requireEnv helper.
+[2026-03-06 22:20] Completed task 1.9 - Added core barrel exports for types and config modules.
+[2026-03-06 22:21] Completed task 2.1 - Implemented Drizzle schema for markets and ingestion_runs with unique platform/platform_id index.
+[2026-03-06 22:21] Completed task 2.2 - Added Bun SQLite DB factory with WAL, foreign keys, and migration runner.
+[2026-03-06 22:22] Completed task 2.3 - Added drizzle.config.ts and generated initial SQL migration under packages/core/drizzle/.
+[2026-03-06 22:22] Completed task 2.4 - Updated core barrel exports to include schema and db modules.
+[2026-03-06 22:22] Completed task 2.5 - Added bun:test DB integration tests for inserts, queries, and unique constraint enforcement.
+[2026-03-06 22:24] Completed task 3.1 - Created @barbara/shared-platform package and PlatformAuthProvider interface signatures.
+[2026-03-06 22:24] Completed task 3.2 - Added shared-platform raw API type stubs with TODO markers.
+[2026-03-06 22:24] Completed task 3.3 - Added shared-platform barrel exports.
+[2026-03-06 22:24] Completed task 3.4 - Created runtime, matching, ingestion, and dashboard workspace stub packages.
+[2026-03-06 22:27] Verification complete - bun install, TypeScript checks, ESLint checks, drizzle migration generation, Bun tests, and cross-package @barbara/core imports all pass.
+[2026-03-06 22:27] Environment note - bunx command wrapper errors with CouldntReadCurrentDirectory, so equivalent local binaries were used for tsc/eslint/drizzle checks.
+[2026-03-07 00:00] Code review completed — no bugs found. Applied minor robustness fix to eslint.config.mjs (spread order for js.configs.recommended). All verifications re-confirmed passing.
+[2026-03-07 00:00] Brief 0001-project-foundation is COMPLETE. All 3 checkpoints and 17 tasks done.

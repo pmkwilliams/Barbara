@@ -1,0 +1,83 @@
+checkpoints:
+  - id: 1
+    name: "Monorepo scaffolding & core types/config"
+    verify: "`bun install` resolves workspaces, `bunx tsc --noEmit` has zero errors, `bunx eslint .` has zero errors"
+    status: completed
+    tasks:
+      - id: 1.1
+        description: "Create root package.json with Bun workspaces config (`\"workspaces\": [\"packages/*\"]`), name, and devDependencies (typescript, eslint, @eslint/js, typescript-eslint, drizzle-kit)"
+        status: completed
+      - id: 1.2
+        description: "Create root tsconfig.json with strict settings (strict, noUncheckedIndexedAccess, exactOptionalPropertyTypes, moduleResolution bundler, target/module esnext)"
+        status: completed
+      - id: 1.3
+        description: "Create eslint.config.mjs flat config using @eslint/js recommended + typescript-eslint recommended, ignoring node_modules/, dist/, drizzle/, scoped to **/*.ts"
+        status: completed
+      - id: 1.4
+        description: "Update .gitignore to add data/, *.db, *.db-wal, *.db-shm entries for SQLite files"
+        status: completed
+      - id: 1.5
+        description: "Create .env.example with documented keys: DATABASE_PATH, KALSHI_API_KEY, KALSHI_API_SECRET, POLYMARKET_API_KEY, POLYMARKET_PRIVATE_KEY, LOG_LEVEL"
+        status: completed
+      - id: 1.6
+        description: "Create @barbara/core package.json (with drizzle-orm dep) and tsconfig.json (extends root)"
+        status: completed
+        blocked_by: [1.1, 1.2]
+      - id: 1.7
+        description: "Implement core/src/types.ts — Platform and MarketStatus as const object + type union enums, Market and IngestionRun interfaces matching schema shapes"
+        status: completed
+        blocked_by: [1.6]
+      - id: 1.8
+        description: "Implement core/src/config.ts — loadConfig() returning typed Config object (DATABASE_PATH with default, LOG_LEVEL with default, optional platform keys), requireEnv(key) helper that throws on missing"
+        status: completed
+        blocked_by: [1.6]
+      - id: 1.9
+        description: "Create core/src/index.ts barrel re-exporting types and config modules"
+        status: completed
+        blocked_by: [1.7, 1.8]
+
+  - id: 2
+    name: "Database layer & tests"
+    verify: "`bunx drizzle-kit generate` produces migration SQL in packages/core/drizzle/, `bun test` passes all assertions (round-trip insert/query for markets and ingestion_runs, unique constraint violation on duplicate platform+platform_id)"
+    status: completed
+    blocked_by: [1]
+    tasks:
+      - id: 2.1
+        description: "Implement core/src/schema.ts using drizzle-orm/sqlite-core — markets table (id text PK, platform, platform_id, title, description, outcome_labels, resolution_source, close_time, category, status, volume, resolution_hash, raw_data, created_at, updated_at) with unique index on (platform, platform_id), and ingestion_runs table (id integer PK autoincrement, platform, started_at, completed_at, markets_found, markets_created, markets_updated, status, error)"
+        status: completed
+      - id: 2.2
+        description: "Implement core/src/db.ts — createDb(path?) factory using bun:sqlite with WAL mode + foreign keys enabled, Drizzle wrapper with schema import for relational queries, runMigrations(db) using drizzle-orm/bun-sqlite/migrator pointing to packages/core/drizzle/"
+        status: completed
+        blocked_by: [2.1]
+      - id: 2.3
+        description: "Create root drizzle.config.ts (dialect sqlite, schema pointing to packages/core/src/schema.ts, out to packages/core/drizzle/, dbCredentials from DATABASE_PATH env with default). Run `bunx drizzle-kit generate` to produce initial migration SQL files"
+        status: completed
+        blocked_by: [2.1]
+      - id: 2.4
+        description: "Update core/src/index.ts barrel to re-export schema and db modules"
+        status: completed
+        blocked_by: [2.1, 2.2]
+      - id: 2.5
+        description: "Write core/test/db.test.ts using bun:test — create :memory: DB via createDb(':memory:'), run migrations, test: insert market row and query back asserting all fields, insert ingestion_run and query back, assert duplicate (platform, platform_id) insert throws"
+        status: completed
+        blocked_by: [2.2, 2.3]
+
+  - id: 3
+    name: "Shared-platform & stub packages"
+    verify: "`bunx tsc --noEmit` passes across all packages, cross-package import (`import { Platform, MarketStatus } from '@barbara/core'`) works from any package"
+    status: completed
+    blocked_by: [2]
+    tasks:
+      - id: 3.1
+        description: "Create @barbara/shared-platform package.json (depends on @barbara/core via workspace:*), tsconfig.json (extends root), and src/auth.ts with PlatformAuthProvider interface (getHeaders, signRequest method signatures — no implementation)"
+        status: completed
+      - id: 3.2
+        description: "Add shared-platform/src/api-types.ts with empty KalshiRawMarket and PolymarketRawMarket interfaces with TODO comments for later population"
+        status: completed
+      - id: 3.3
+        description: "Create shared-platform/src/index.ts barrel re-exporting auth and api-types modules"
+        status: completed
+        blocked_by: [3.1, 3.2]
+      - id: 3.4
+        description: "Create four stub packages (@barbara/runtime, @barbara/matching, @barbara/ingestion, @barbara/dashboard) — each with package.json (dep on @barbara/core via workspace:*), tsconfig.json (extends root), and src/index.ts with empty export"
+        status: completed

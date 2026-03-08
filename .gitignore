@@ -25,3 +25,9 @@ Thumbs.db
 credentials.json
 *.pem
 *.key
+
+# SQLite data
+data/
+*.db
+*.db-wal
+*.db-shm

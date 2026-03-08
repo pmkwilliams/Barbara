@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { TokenBucket } from "../../src/kalshi/rate-limiter";
+import { TokenBucket } from "../../src/rate-limiter";
 
 describe("TokenBucket", () => {
   test("acquire N tokens from bucket of capacity N succeeds without delay", async () => {

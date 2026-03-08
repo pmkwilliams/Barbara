@@ -1,5 +1,6 @@
 import { KalshiAuth } from "./auth";
-import { TokenBucket } from "./rate-limiter";
+import { TokenBucket } from "../rate-limiter";
+import { executeWithRetry } from "../retry";
 import type {
   GetExchangeStatusResponse,
   GetMarketResponse,
@@ -12,10 +13,6 @@ const DEFAULT_BASE_URL =
   "https://api.elections.kalshi.com/trade-api/v2";
 const DEFAULT_READ_LIMIT = 10;
 const DEFAULT_WRITE_LIMIT = 5;
-
-const MAX_RETRIES = 3;
-const BASE_DELAY_MS = 500;
-const MAX_JITTER_MS = 250;
 
 export interface KalshiClientConfig {
   apiKeyId?: string;
@@ -150,74 +147,7 @@ export class KalshiClient {
       return headers;
     };
 
-    return this.executeWithRetry<T>(method, url, buildHeaders, opts?.body);
-  }
-
-  private async executeWithRetry<T>(
-    method: string,
-    url: string,
-    buildHeaders: () => Record<string, string>,
-    body?: unknown
-  ): Promise<T> {
-    let lastError: Error | undefined;
-
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const headers = buildHeaders();
-        const fetchOpts: RequestInit = { method, headers };
-        if (body !== undefined) {
-          fetchOpts.body = JSON.stringify(body);
-        }
-
-        const response = await fetch(url, fetchOpts);
-
-        if (response.ok) {
-          return (await response.json()) as T;
-        }
-
-        const responseText = await response.text();
-        const error = new Error(`HTTP ${response.status}: ${responseText}`);
-
-        if (!this.isRetryableStatus(response.status)) {
-          throw error;
-        }
-
-        lastError = error;
-
-        if (attempt < MAX_RETRIES) {
-          const delay = this.calculateDelay(
-            attempt,
-            response.status === 429
-          );
-          await new Promise((resolve) => setTimeout(resolve, delay));
-        }
-      } catch (error) {
-        if (error instanceof TypeError) {
-          // Network error — retryable
-          lastError = error;
-
-          if (attempt < MAX_RETRIES) {
-            const delay = this.calculateDelay(attempt, false);
-            await new Promise((resolve) => setTimeout(resolve, delay));
-          }
-        } else {
-          throw error;
-        }
-      }
-    }
-
-    throw lastError ?? new Error("Request failed after max retries");
-  }
-
-  private isRetryableStatus(status: number): boolean {
-    return status === 429 || (status >= 500 && status <= 504);
-  }
-
-  private calculateDelay(attempt: number, is429: boolean): number {
-    const baseDelay = BASE_DELAY_MS * Math.pow(2, attempt);
-    const jitter = Math.random() * MAX_JITTER_MS;
-    const multiplier = is429 ? 2 : 1;
-    return baseDelay * multiplier + jitter;
+    return executeWithRetry<T>(method, url, buildHeaders, opts?.body);
   }
 
   async getExchangeStatus(): Promise<GetExchangeStatusResponse> {

@@ -22,9 +22,6 @@ export class TokenBucket {
   }
 
   async acquire(): Promise<void> {
-    // Chain onto previous acquire to serialize access.
-    // Each caller waits for the prior one to finish before
-    // reading/modifying the token count, preventing races.
     const ticket = this.pending.then(() => this.acquireInternal());
     this.pending = ticket;
     return ticket;

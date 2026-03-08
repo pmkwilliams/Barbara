@@ -1,0 +1,53 @@
+checkpoints:
+  - id: 1
+    name: "Shared Infra Refactor"
+    verify: "bun test packages/shared-platform/test/kalshi/*.test.ts passes"
+    status: completed
+    tasks:
+      - id: 1.1
+        description: "Move TokenBucket to shared-platform/src/rate-limiter.ts and update Kalshi exports/imports plus rate-limiter test path"
+        status: completed
+      - id: 1.2
+        description: "Extract shared retry helpers into shared-platform/src/retry.ts and update KalshiClient to use them without changing error messages"
+        status: completed
+      - id: 1.3
+        description: "Update shared root exports and shared-platform tsconfig include list for new shared files and tests"
+        status: completed
+
+  - id: 2
+    name: "Polymarket Clients"
+    verify: "bun test packages/shared-platform/test/polymarket/*.test.ts passes"
+    status: completed
+    blocked_by: [1]
+    tasks:
+      - id: 2.1
+        description: "Populate PolymarketRawMarket and add polymarket/types.ts with Gamma and CLOB response/param types"
+        status: completed
+      - id: 2.2
+        description: "Create GammaClient with parsing, endpoint plus general rate limiting, single-page requests, tags/search helpers, and async pagination"
+        status: completed
+        blocked_by: [2.1]
+      - id: 2.3
+        description: "Create ClobClient with shared retry, endpoint plus general rate limiting, and public read endpoint methods"
+        status: completed
+        blocked_by: [2.1]
+      - id: 2.4
+        description: "Wire polymarket exports through shared-platform/src/polymarket/index.ts and shared-platform/src/index.ts"
+        status: completed
+        blocked_by: [2.2, 2.3]
+
+  - id: 3
+    name: "Tests And Verification"
+    verify: "bun test passes"
+    status: completed
+    blocked_by: [1, 2]
+    tasks:
+      - id: 3.1
+        description: "Add GammaClient tests for event parsing, pagination, query params, and retry behavior"
+        status: completed
+      - id: 3.2
+        description: "Add ClobClient tests for order book fetch and batch books POST body"
+        status: completed
+      - id: 3.3
+        description: "Run bun test, fix any regressions, and record final verification in progress.txt"
+        status: completed

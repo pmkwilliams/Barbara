@@ -1,0 +1,38 @@
+## 0102 - Polymarket REST Client: COMPLETE
+
+All 3 checkpoints completed. All 10 tasks done.
+
+### Checkpoint 1: Shared Infra Refactor ✓
+- Moved `TokenBucket` to `packages/shared-platform/src/rate-limiter.ts`
+- Updated Kalshi client/test imports and removed the Kalshi-local rate limiter barrel export
+- Extracted shared retry helpers to `packages/shared-platform/src/retry.ts`
+- Switched `KalshiClient` to shared retry without changing HTTP error message format
+- Updated shared root exports and `packages/shared-platform/tsconfig.json` include paths
+
+### Checkpoint 2: Polymarket Clients ✓
+- Populated `PolymarketRawMarket` in `packages/shared-platform/src/api-types.ts`
+- Added `packages/shared-platform/src/polymarket/types.ts` with Gamma raw/parsed types, CLOB response types, and query param types
+- Created `GammaClient` with two-tier rate limiting, raw-to-parsed market/event conversion, single-page requests, tag loading, search, and async pagination
+- Created `ClobClient` with shared retry, two-tier endpoint budgets, order book/pricing read methods, batch `POST /books`, and time/history helpers
+- Wired Polymarket exports through `packages/shared-platform/src/polymarket/index.ts` and `packages/shared-platform/src/index.ts`
+
+### Checkpoint 3: Tests And Verification ✓
+- Added `packages/shared-platform/test/polymarket/gamma-client.test.ts` for event parsing, pagination, query param serialization, and retry behavior
+- Added `packages/shared-platform/test/polymarket/clob-client.test.ts` for order book fetches and `POST /books` request bodies
+- Verified existing Kalshi tests still pass after the shared infra refactor
+
+### Verification
+- `bun test packages/shared-platform/test/kalshi/*.test.ts packages/shared-platform/test/polymarket/*.test.ts`: pass
+- `bun test`: 25 pass, 0 fail across 6 files
+- `bunx tsc --noEmit`: pass
+- Follow-up rate-limit fixes verified with `bun test`: 27 pass, 0 fail across 6 files
+
+### Follow-up Fixes
+- Matched Gamma endpoint buckets by path prefix so `/events/{id}` and `/markets/{id}` consume the documented endpoint budgets
+- Added CLOB endpoint buckets for `/prices-history` and `/tick-size` and covered both fixes with regression tests
+
+### Manual API Validation
+- Live Gamma check passed via `GammaClient.getMarkets({ limit: 1, active: true, closed: false })`
+- Returned market `531202` (`BitBoy convicted?`) with parsed `outcomes` and `clobTokenIds`
+- Live CLOB checks passed via `ClobClient.getTime()` and `ClobClient.getBook(tokenId)` using the Gamma-derived token ID
+- Returned server time `1773003431` and a valid order book with bid/ask levels for asset `75467129615908319583031474642658885479135630431889036121812713428992454630178`

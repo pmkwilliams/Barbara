@@ -26,5 +26,23 @@ export interface KalshiRawMarket {
   [key: string]: unknown;
 }
 
-// TODO: Populate from Polymarket API response contracts in a later brief.
-export interface PolymarketRawMarket {}
+export interface PolymarketRawMarket {
+  id: string;
+  question: string;
+  conditionId: string;
+  slug: string;
+  outcomes: string[];
+  outcomePrices: string[];
+  clobTokenIds: string[];
+  active: boolean;
+  closed: boolean;
+  volume: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  category: string;
+  resolutionSource: string;
+  groupItemTitle: string;
+  enableOrderBook: boolean;
+  [key: string]: unknown;
+}

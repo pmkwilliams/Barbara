@@ -5,6 +5,12 @@ import { GammaClient } from "../../src/polymarket/gamma-client";
 const originalFetch = globalThis.fetch;
 const originalSetTimeout = globalThis.setTimeout;
 
+type TestBucket = { acquire: () => Promise<void> };
+type GammaClientBuckets = {
+  generalBucket: TestBucket;
+  endpointBuckets: Map<string, TestBucket>;
+};
+
 const rawMarket = {
   id: "1",
   question: "Will it rain tomorrow?",
@@ -123,13 +129,9 @@ describe("GammaClient", () => {
     }) as unknown as typeof fetch;
 
     const client = new GammaClient("https://gamma.test");
-    const generalBucket = (client as any).generalBucket as { acquire: () => Promise<void> };
-    const eventBucket = (client as any).endpointBuckets.get("/events") as {
-      acquire: () => Promise<void>;
-    };
-    const marketBucket = (client as any).endpointBuckets.get("/markets") as {
-      acquire: () => Promise<void>;
-    };
+    const { generalBucket, endpointBuckets } = client as unknown as GammaClientBuckets;
+    const eventBucket = endpointBuckets.get("/events") as TestBucket;
+    const marketBucket = endpointBuckets.get("/markets") as TestBucket;
 
     let generalCalls = 0;
     let eventCalls = 0;

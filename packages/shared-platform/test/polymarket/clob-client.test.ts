@@ -4,6 +4,12 @@ import { ClobClient } from "../../src/polymarket/clob-client";
 
 const originalFetch = globalThis.fetch;
 
+type TestBucket = { acquire: () => Promise<void> };
+type ClobClientBuckets = {
+  generalBucket: TestBucket;
+  endpointBuckets: Map<string, TestBucket>;
+};
+
 describe("ClobClient", () => {
   afterEach(() => {
     globalThis.fetch = originalFetch;
@@ -64,13 +70,9 @@ describe("ClobClient", () => {
     }) as unknown as typeof fetch;
 
     const client = new ClobClient("https://clob.test");
-    const generalBucket = (client as any).generalBucket as { acquire: () => Promise<void> };
-    const pricesHistoryBucket = (client as any).endpointBuckets.get("/prices-history") as {
-      acquire: () => Promise<void>;
-    };
-    const tickSizeBucket = (client as any).endpointBuckets.get("/tick-size") as {
-      acquire: () => Promise<void>;
-    };
+    const { generalBucket, endpointBuckets } = client as unknown as ClobClientBuckets;
+    const pricesHistoryBucket = endpointBuckets.get("/prices-history") as TestBucket;
+    const tickSizeBucket = endpointBuckets.get("/tick-size") as TestBucket;
 
     let generalCalls = 0;
     let pricesHistoryCalls = 0;

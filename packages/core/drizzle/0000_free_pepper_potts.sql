@@ -18,6 +18,7 @@ CREATE TABLE `markets` (
 	`description` text,
 	`outcome_labels` text NOT NULL,
 	`resolution_source` text,
+	`resolution_rules` text,
 	`close_time` text,
 	`category` text,
 	`status` text DEFAULT 'active' NOT NULL,

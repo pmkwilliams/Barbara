@@ -14,23 +14,26 @@ export const MarketStatus = {
 
 export type MarketStatus = (typeof MarketStatus)[keyof typeof MarketStatus];
 
-export interface Market {
+export interface NormalizedMarket {
   id: string;
   platform: Platform;
   platform_id: string;
   title: string;
   description: string | null;
-  outcome_labels: string;
+  outcome_labels: string[];
   resolution_source: string | null;
+  resolution_rules: string | null;
   close_time: string | null;
   category: string | null;
   status: MarketStatus;
   volume: number | null;
   resolution_hash: string | null;
-  raw_data: string | null;
+  raw_data: unknown | null;
   created_at: string;
   updated_at: string;
 }
+
+export type NormalizedMarketInput = Omit<NormalizedMarket, "id" | "created_at" | "updated_at">;
 
 export interface IngestionRun {
   id: number;

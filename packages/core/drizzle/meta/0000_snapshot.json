@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "17a24eb4-52be-4cc1-9eeb-f614ad2668b0",
+  "id": "60234306-d941-487d-b516-0f664a5701fa",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "ingestion_runs": {
@@ -126,6 +126,13 @@
         },
         "resolution_source": {
           "name": "resolution_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "resolution_rules": {
+          "name": "resolution_rules",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

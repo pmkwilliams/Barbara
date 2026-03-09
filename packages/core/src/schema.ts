@@ -11,6 +11,7 @@ export const markets = sqliteTable(
     description: text("description"),
     outcome_labels: text("outcome_labels").notNull(),
     resolution_source: text("resolution_source"),
+    resolution_rules: text("resolution_rules"),
     close_time: text("close_time"),
     category: text("category"),
     status: text("status").notNull().default("active"),

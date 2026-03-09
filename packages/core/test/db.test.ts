@@ -19,6 +19,7 @@ describe("core database", () => {
         description: "Consumer Price Index year-over-year outcome market.",
         outcome_labels: JSON.stringify(["yes", "no"]),
         resolution_source: "BLS CPI Release",
+        resolution_rules: "Resolves based on BLS CPI release.",
         close_time: "2026-04-01T12:30:00.000Z",
         category: "macro",
         status: "active",

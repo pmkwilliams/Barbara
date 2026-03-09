@@ -1,0 +1,53 @@
+checkpoints:
+  - id: 1
+    name: "Normalized Market Contract"
+    verify: "Fresh Drizzle migration under `packages/core/drizzle/` includes `resolution_rules text`, and the core market schema/types now represent normalized markets with the new field."
+    status: completed
+    tasks:
+      - id: 1.1
+        description: "Add the nullable `resolution_rules` column to the markets table schema in `packages/core/src/schema.ts`."
+        status: completed
+      - id: 1.2
+        description: "Replace the old `Market` interface with `NormalizedMarket` and `NormalizedMarketInput` in `packages/core/src/types.ts`, preserving existing enums and unrelated types."
+        status: completed
+        blocked_by: [1.1]
+      - id: 1.3
+        description: "Reset and regenerate `packages/core/drizzle/` so the fresh 0000 migration reflects the updated schema, including `resolution_rules`."
+        status: completed
+        blocked_by: [1.1]
+      - id: 1.4
+        description: "Update the inserted market fixture in `packages/core/test/db.test.ts` to include `resolution_rules` so schema-level round-trip expectations stay aligned."
+        status: completed
+        blocked_by: [1.1]
+
+  - id: 2
+    name: "Repository Round-Trip API"
+    verify: "`packages/core/src/market-repository.ts` exposes normalized market read/write helpers, and repository tests prove outcome labels and raw data round-trip as parsed values rather than serialized strings."
+    status: completed
+    blocked_by: [1]
+    tasks:
+      - id: 2.1
+        description: "Create `packages/core/src/market-repository.ts` with private `toRow`/`fromRow` helpers that serialize and parse `outcome_labels` and `raw_data` at the DB boundary."
+        status: completed
+      - id: 2.2
+        description: "Implement `upsertMarket`, `getMarketById`, `getMarketsByPlatform`, and `getActiveMarkets` using `BarbaraDb`, Drizzle queries, and the normalized row helpers."
+        status: completed
+        blocked_by: [2.1]
+      - id: 2.3
+        description: "Export the repository module from `packages/core/src/index.ts` so the new API is available from the package entrypoint."
+        status: completed
+        blocked_by: [2.2]
+      - id: 2.4
+        description: "Add `packages/core/test/market-repository.test.ts` covering insert/update behavior, lookup helpers, platform and active filtering, and round-trips for arrays, objects, and null raw data."
+        status: completed
+        blocked_by: [2.2]
+
+  - id: 3
+    name: "Package Validation"
+    verify: "`bun test` passes for the updated core test suite and `bunx tsc --noEmit` reports zero type errors after the normalized schema and repository changes."
+    status: completed
+    blocked_by: [2]
+    tasks:
+      - id: 3.1
+        description: "Run the full core verification flow and fix any integration fallout so the regenerated migration, updated schema/types, and repository layer work together cleanly."
+        status: completed

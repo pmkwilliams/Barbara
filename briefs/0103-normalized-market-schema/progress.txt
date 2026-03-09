@@ -1,0 +1,19 @@
+2026-03-08: Started implementation. Task 1.1 in progress.
+2026-03-08: Completed task 1.1. Added `resolution_rules` to the markets schema.
+2026-03-08: Started task 1.2. Replacing the market app types with normalized variants.
+2026-03-08: Completed task 1.2. Replaced `Market` with `NormalizedMarket` and `NormalizedMarketInput`.
+2026-03-08: Completed task 1.3. Regenerated `packages/core/drizzle/` and verified the fresh migration includes `resolution_rules text`.
+2026-03-08: Started task 1.4. Aligning the DB fixture with the updated schema.
+2026-03-08: Completed task 1.4. Updated the DB fixture to include `resolution_rules`.
+2026-03-08: Completed checkpoint 1. Schema, types, migration, and fixture are aligned.
+2026-03-08: Started task 2.1. Building normalized market repository helpers.
+2026-03-08: Completed task 2.1. Added DB boundary helpers that serialize and parse normalized market fields.
+2026-03-08: Completed task 2.2. Implemented normalized market upsert and lookup helpers.
+2026-03-08: Started task 2.3. Exporting the repository API from the package entrypoint.
+2026-03-08: Completed task 2.3. Exported the repository helpers from `packages/core/src/index.ts`.
+2026-03-08: Completed task 2.4. Added repository tests covering insert, update, filtering, and JSON round-trips.
+2026-03-08: Completed checkpoint 2. Repository API and round-trip coverage are in place.
+2026-03-08: Started task 3.1. Running package verification and fixing fallout.
+2026-03-08: Completed task 3.1. `bun test` passed and `bunx tsc --noEmit` completed with zero type errors.
+2026-03-08: Completed checkpoint 3. The core package validates cleanly.
+2026-03-08: Plan complete.

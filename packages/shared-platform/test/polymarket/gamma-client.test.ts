@@ -25,7 +25,6 @@ const rawMarket = {
   description: "Rain market",
   startDate: "2026-03-01T00:00:00Z",
   endDate: "2026-03-02T00:00:00Z",
-  category: "Weather",
   resolutionSource: "National Weather Service",
   groupItemTitle: "Tomorrow",
   enableOrderBook: true,
@@ -91,6 +90,27 @@ describe("GammaClient", () => {
     expect(capturedUrls).toHaveLength(2);
     expect(new URL(capturedUrls[0] ?? "").searchParams.get("offset")).toBe("0");
     expect(new URL(capturedUrls[1] ?? "").searchParams.get("offset")).toBe("2");
+  });
+
+  test("getMarkets tolerates malformed array fields in raw payloads", async () => {
+    globalThis.fetch = (async () => {
+      return new Response(JSON.stringify([
+        {
+          ...rawMarket,
+          id: "bad-market",
+          outcomePrices: undefined,
+          clobTokenIds: "not-json"
+        }
+      ]));
+    }) as unknown as typeof fetch;
+
+    const client = new GammaClient("https://gamma.test");
+    const markets = await client.getMarkets({ limit: 1 });
+
+    expect(markets).toHaveLength(1);
+    expect(markets[0]?.outcomes).toEqual(["Yes", "No"]);
+    expect(markets[0]?.outcomePrices).toEqual([]);
+    expect(markets[0]?.clobTokenIds).toEqual([]);
   });
 
   test("getMarkets serializes query params correctly", async () => {

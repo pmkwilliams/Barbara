@@ -32,6 +32,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@barbara/core": "workspace:*",
+        "@barbara/shared-platform": "workspace:*",
       },
     },
     "packages/matching": {

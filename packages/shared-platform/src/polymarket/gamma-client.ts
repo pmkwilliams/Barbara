@@ -19,8 +19,22 @@ const DEFAULT_PAGE_LIMIT = 100;
 type QueryPrimitive = string | number | boolean;
 type QueryValue = QueryPrimitive | QueryPrimitive[] | undefined;
 
-function parseJsonArray(value: string): string[] {
-  return JSON.parse(value) as string[];
+function parseJsonArray(value: unknown): string[] {
+  if (typeof value !== "string") {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.filter((item): item is string => typeof item === "string");
+  } catch {
+    return [];
+  }
 }
 
 function parseMarket(raw: GammaMarketRaw): GammaMarket {
@@ -101,6 +115,7 @@ export class GammaClient {
     path: string,
     opts?: {
       params?: Record<string, QueryValue>;
+      signal?: AbortSignal;
     }
   ): Promise<T> {
     await this.acquireForEndpoint(path);
@@ -108,7 +123,9 @@ export class GammaClient {
     return executeWithRetry<T>(
       method,
       this.buildUrl(path, opts?.params),
-      () => ({ "Content-Type": "application/json" })
+      () => ({ "Content-Type": "application/json" }),
+      undefined,
+      opts?.signal ? { signal: opts.signal } : undefined
     );
   }
 
@@ -131,11 +148,17 @@ export class GammaClient {
     return parseMarket(rawMarket);
   }
 
-  async getMarkets(params?: GetMarketsParams): Promise<GammaMarket[]> {
+  async getMarkets(
+    params?: GetMarketsParams,
+    options?: { signal?: AbortSignal }
+  ): Promise<GammaMarket[]> {
     const rawMarkets = await this.request<GammaMarketRaw[]>(
       "GET",
       "/markets",
-      params ? { params } : undefined
+      {
+        ...(params ? { params } : {}),
+        ...(options?.signal ? { signal: options.signal } : {})
+      }
     );
     return rawMarkets.map(parseMarket);
   }
@@ -170,7 +193,8 @@ export class GammaClient {
     path: string,
     params: Record<string, QueryValue> | undefined,
     parse: (raw: TRaw) => T,
-    limit = DEFAULT_PAGE_LIMIT
+    limit = DEFAULT_PAGE_LIMIT,
+    options?: { signal?: AbortSignal }
   ): AsyncGenerator<T[]> {
     const pageSize = Number(params?.limit ?? limit);
     let offset = Number(params?.offset ?? 0);
@@ -182,6 +206,7 @@ export class GammaClient {
           limit: pageSize,
           offset,
         },
+        ...(options?.signal ? { signal: options.signal } : {}),
       });
 
       const page = response.map(parse);
@@ -201,13 +226,15 @@ export class GammaClient {
   }
 
   async *paginateMarkets(
-    params?: GetMarketsParams
+    params?: GetMarketsParams,
+    options?: { signal?: AbortSignal }
   ): AsyncGenerator<GammaMarket[]> {
     yield* this.paginate<GammaMarketRaw, GammaMarket>(
       "/markets",
       params,
       parseMarket,
-      params?.limit
+      params?.limit,
+      options
     );
   }
 

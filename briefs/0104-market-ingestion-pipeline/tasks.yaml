@@ -1,0 +1,97 @@
+checkpoints:
+  - id: 1
+    name: "Core Foundations"
+    verify: "bun test packages/core/test/resolution-hash.test.ts && bun test packages/core/test/ingestion-run-repository.test.ts"
+    status: completed
+    tasks:
+      - id: 1.1
+        description: "Create `packages/core/src/resolution-hash.ts` — `computeResolutionHash()` using SHA-256 via `Bun.CryptoHasher`, null→empty string canonicalization, alphabetical label sort, null-byte separator"
+        status: completed
+      - id: 1.2
+        description: "Write `packages/core/test/resolution-hash.test.ts` — determinism, sensitivity to each field, null handling, label order independence"
+        status: completed
+        blocked_by: [1.1]
+      - id: 1.3
+        description: "Create `packages/core/src/logger.ts` — `createLogger(context)` returning `{ debug, info, warn, error }` methods, `LOG_LEVEL` threshold gating, structured `[LEVEL] [context] message` format"
+        status: completed
+      - id: 1.4
+        description: "Create `packages/core/src/ingestion-run-repository.ts` — `createIngestionRun`, `completeIngestionRun`, `failIngestionRun` functions using Drizzle against `ingestion_runs` table (follows `market-repository.ts` patterns)"
+        status: completed
+      - id: 1.5
+        description: "Write `packages/core/test/ingestion-run-repository.test.ts` — create/complete/fail lifecycle, count accuracy, error message storage"
+        status: completed
+        blocked_by: [1.4]
+      - id: 1.6
+        description: "Add `INGESTION_INTERVAL_MS` (default 900000) and `MAX_CYCLE_DURATION_MS` (default 600000) to `Config` interface and `loadConfig()` in `config.ts`. Export new modules from `packages/core/src/index.ts`"
+        status: completed
+        blocked_by: [1.1, 1.3, 1.4]
+
+  - id: 2
+    name: "Kalshi Cursor Paginator"
+    verify: "bun test packages/shared-platform/test/kalshi/client.test.ts"
+    status: completed
+    tasks:
+      - id: 2.1
+        description: "Add `paginateMarkets()` async generator to `KalshiClient` in `packages/shared-platform/src/kalshi/client.ts` — cursor-based pagination (distinct from Gamma's offset-based `paginate()`), terminates on empty markets array or falsy cursor"
+        status: completed
+      - id: 2.2
+        description: "Add paginator tests to `packages/shared-platform/test/kalshi/client.test.ts` — cursor advancement across pages, empty page termination, single page with no cursor, optional params forwarding"
+        status: completed
+        blocked_by: [2.1]
+
+  - id: 3
+    name: "Normalizers & Fetchers"
+    verify: "bun test packages/ingestion/test/normalizers/"
+    status: completed
+    blocked_by: [2]
+    tasks:
+      - id: 3.1
+        description: "Add `@barbara/shared-platform` dependency to `packages/ingestion/package.json`. Add `\"test\"` to `packages/ingestion/tsconfig.json` include array"
+        status: completed
+      - id: 3.2
+        description: "Create `packages/ingestion/src/normalizers/kalshi.ts` — `normalizeKalshiMarket()` pure function. Status: map both `open` and `active`→ACTIVE, `closed`→CLOSED, `settled`→RESOLVED (warn on unmapped). Concat `rules_primary`+`rules_secondary` for resolution_rules. Hardcode `category`, `description`, `resolution_source` as null. Preserve all extra fields in `raw_data`. Set `resolution_hash: null`"
+        status: completed
+        blocked_by: [3.1]
+      - id: 3.3
+        description: "Create `packages/ingestion/src/normalizers/polymarket.ts` — `normalizePolymarketMarket()` pure function using `GammaMarket` type. `platform_id`=`conditionId`. Status: `!closed`→ACTIVE, `closed`→CLOSED. `volume`=`parseFloat(raw.volume)` (NaN→null). Set `resolution_hash: null`"
+        status: completed
+        blocked_by: [3.1]
+      - id: 3.4
+        description: "Write normalizer tests — `packages/ingestion/test/normalizers/kalshi.test.ts` (known raw→expected normalized, null fields, unmapped status warning) and `packages/ingestion/test/normalizers/polymarket.test.ts` (known raw→expected normalized, volume parsing edge cases, status mapping)"
+        status: completed
+        blocked_by: [3.2, 3.3]
+      - id: 3.5
+        description: "Create `packages/ingestion/src/fetchers/kalshi.ts` (`fetchAllKalshiMarkets` — iterates `client.paginateMarkets()`, concats pages) and `packages/ingestion/src/fetchers/polymarket.ts` (`fetchAllPolymarketMarkets` — same pattern with `GammaClient`). Both accept optional filter params"
+        status: completed
+        blocked_by: [3.1]
+
+  - id: 4
+    name: "Orchestrator"
+    verify: "bun test packages/ingestion/test/orchestrator.test.ts"
+    status: completed
+    blocked_by: [1, 3]
+    tasks:
+      - id: 4.1
+        description: "Create `packages/ingestion/src/orchestrator.ts` — `runIngestion(platform, db, clients)`. Flow: create ingestion run → fetch via fetcher → per-market try/catch: normalize → computeResolutionHash → upsertMarket → track insert vs update via created_at===updated_at. Complete run on success (even with per-market errors), fail run only on run-level errors. Return counts + duration_ms"
+        status: completed
+      - id: 4.2
+        description: "Write `packages/ingestion/test/orchestrator.test.ts` — mocked platform clients + in-memory DB: full successful run with count verification, per-market error handling (continues processing), run-level failure marking, both platforms exercised"
+        status: completed
+        blocked_by: [4.1]
+
+  - id: 5
+    name: "Scheduler, Backfill & Entry Point"
+    verify: "bun test && bun run packages/ingestion/src/backfill.ts --help 2>&1 | head -1"
+    status: completed
+    blocked_by: [4]
+    tasks:
+      - id: 5.1
+        description: "Create `packages/ingestion/src/scheduler.ts` — long-running Bun process with `setInterval` at `INGESTION_INTERVAL_MS`. `isRunning` guard to skip overlapping cycles (log warning). `MAX_CYCLE_DURATION_MS` timeout to reset stalled guard. Sequential: Kalshi then Polymarket. Graceful shutdown via SIGINT/SIGTERM handlers (clear interval, await current cycle, close DB)"
+        status: completed
+      - id: 5.2
+        description: "Create `packages/ingestion/src/backfill.ts` — one-shot CLI: create DB + run migrations, create platform clients, run ingestion for both platforms sequentially, print summary table (platform, fetched, inserted, updated, duration), exit 0/1"
+        status: completed
+      - id: 5.3
+        description: "Update `packages/ingestion/src/index.ts` — replace empty `export {}` with scheduler bootstrap: init DB, create clients, start scheduler. Optionally detect `--backfill` flag to delegate to backfill instead"
+        status: completed
+        blocked_by: [5.1, 5.2]

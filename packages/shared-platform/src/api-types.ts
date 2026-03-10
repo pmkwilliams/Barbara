@@ -1,6 +1,7 @@
 export interface KalshiRawMarket {
   ticker: string;
   event_ticker: string;
+  series_ticker?: string;
   market_type: "binary" | "scalar";
   title: string;
   yes_sub_title: string;
@@ -38,7 +39,6 @@ export interface PolymarketRawMarket {
   description: string;
   startDate: string;
   endDate: string;
-  category: string;
   resolutionSource: string;
   groupItemTitle: string;
   enableOrderBook: boolean;

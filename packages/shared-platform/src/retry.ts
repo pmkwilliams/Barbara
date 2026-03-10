@@ -2,6 +2,7 @@ export interface RetryOptions {
   maxRetries?: number;
   baseDelayMs?: number;
   maxJitterMs?: number;
+  signal?: AbortSignal | undefined;
 }
 
 const DEFAULT_MAX_RETRIES = 3;
@@ -34,13 +35,18 @@ export async function executeWithRetry<T>(
   const maxRetries = options.maxRetries ?? DEFAULT_MAX_RETRIES;
   const baseDelayMs = options.baseDelayMs ?? DEFAULT_BASE_DELAY_MS;
   const maxJitterMs = options.maxJitterMs ?? DEFAULT_MAX_JITTER_MS;
+  const signal = options.signal;
 
   let lastError: Error | undefined;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const headers = buildHeaders();
-      const fetchOpts: RequestInit = { method, headers };
+      const fetchOpts: RequestInit = {
+        method,
+        headers,
+        ...(signal ? { signal } : {})
+      };
 
       if (body !== undefined) {
         fetchOpts.body = JSON.stringify(body);
@@ -71,6 +77,10 @@ export async function executeWithRetry<T>(
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw error;
+      }
+
       if (error instanceof TypeError) {
         lastError = error;
 

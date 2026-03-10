@@ -17,11 +17,19 @@ describe("core database", () => {
         platform_id: "KXEVENT-001",
         title: "Will CPI print above 3%?",
         description: "Consumer Price Index year-over-year outcome market.",
+        event_ticker: "CPI-2026",
+        series_ticker: "ECON",
         outcome_labels: JSON.stringify(["yes", "no"]),
         resolution_source: "BLS CPI Release",
         resolution_rules: "Resolves based on BLS CPI release.",
+        open_time: "2026-03-01T12:30:00.000Z",
+        start_time: null,
         close_time: "2026-04-01T12:30:00.000Z",
-        category: "macro",
+        end_time: "2026-04-01T12:30:00.000Z",
+        group_title: null,
+        category: null,
+        market_shape: "binary",
+        is_binary_eligible: true,
         status: "active",
         volume: 12345.67,
         resolution_hash: "abc123",
@@ -89,11 +97,13 @@ describe("core database", () => {
         .values({
           id: "mkt_unique_001",
           platform: "kalshi",
-          platform_id: "DUP-001",
-          title: "First row",
-          outcome_labels: JSON.stringify(["yes", "no"]),
-          status: "active"
-        })
+            platform_id: "DUP-001",
+            title: "First row",
+            outcome_labels: JSON.stringify(["yes", "no"]),
+            market_shape: "binary",
+            is_binary_eligible: true,
+            status: "active"
+          })
         .run();
 
       expect(() => {
@@ -104,6 +114,8 @@ describe("core database", () => {
             platform_id: "DUP-001",
             title: "Duplicate row",
             outcome_labels: JSON.stringify(["yes", "no"]),
+            market_shape: "binary",
+            is_binary_eligible: true,
             status: "active"
           })
           .run();

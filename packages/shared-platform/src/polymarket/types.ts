@@ -30,7 +30,6 @@ export interface GammaMarketRaw {
   description: string;
   startDate: string;
   endDate: string;
-  category: string;
   resolutionSource: string;
   groupItemTitle: string;
   enableOrderBook: boolean;
@@ -51,7 +50,6 @@ export interface GammaMarket {
   description: string;
   startDate: string;
   endDate: string;
-  category: string;
   resolutionSource: string;
   groupItemTitle: string;
   enableOrderBook: boolean;

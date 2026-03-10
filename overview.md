@@ -145,7 +145,7 @@ Start with Kalshi + Polymarket only. Two platforms is sufficient to validate the
 
 - **Polymarket client.** CLOB API client for market listing data. Gamma Markets API for condition metadata. Map Polymarket's condition/token structure to a normalized internal representation.
 
-- **Normalized market schema.** Common internal type across platforms capturing: platform identity, title, description, outcome labels, resolution source, resolution rules (full text), close time, category, status (active/closed/resolved/suspended), pricing, volume, and a hash of resolution-critical fields for change detection.
+- **Normalized market schema.** Common internal type across platforms capturing: platform identity, title, description, outcome labels, resolution source, resolution rules (full text), structural timing (`open_time`, `start_time`, `close_time`, `end_time`), event-family hints (`event_ticker`, `series_ticker`, `group_title`), `market_shape`, `is_binary_eligible`, status (active/closed/resolved/suspended), volume, and a hash of resolution-critical fields for change detection. Do not rely on platform-native category in ingestion; add internal categorization later as a separate enrichment step.
 
 - **Ingestion scheduler.** Polls both platforms every 15–30 minutes for new/updated markets.
 
@@ -169,7 +169,7 @@ Run the ingestion continuously and verify: no missed markets, correct metadata p
 
 ### Milestones
 
-- **Structural pre-filter.** Cheaply eliminate impossible candidates before any expensive embedding or LLM calls. Rules: temporal overlap required, same broad category, both markets still active.
+- **Structural pre-filter.** Cheaply eliminate impossible candidates before any expensive embedding or LLM calls. Rules: temporal overlap required, both markets still active, and V1 matching only considers rows where `is_binary_eligible = true`. Use structural grouping hints like `event_ticker`, `series_ticker`, and `group_title` when available. Internal category can be added later as an enrichment-only filter once it is trustworthy.
 
 - **Embedding retrieval.** Encode each market's title, description, and outcome labels into a vector. For each new market, retrieve top-k nearest neighbors across all other platforms. At <50K active markets, an in-memory index is fine.
 

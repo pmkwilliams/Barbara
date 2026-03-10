@@ -1,3 +1,4 @@
+export type { KalshiRawMarket } from "../api-types";
 import type { KalshiRawMarket } from "../api-types";
 
 export interface GetMarketsResponse {
@@ -24,6 +25,7 @@ export interface GetMarketsParams {
   limit?: number;
   cursor?: string;
   status?: string;
+  mve_filter?: "only" | "exclude";
   event_ticker?: string;
   series_ticker?: string;
 }

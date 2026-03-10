@@ -6,6 +6,7 @@ import type {
   GetMarketResponse,
   GetMarketsParams,
   GetMarketsResponse,
+  KalshiRawMarket,
   KalshiAccountLimits,
 } from "./types";
 
@@ -92,6 +93,7 @@ export class KalshiClient {
       params?: Record<string, string | number | undefined>;
       body?: unknown;
       requireAuth?: boolean;
+      signal?: AbortSignal;
     }
   ): Promise<T> {
     // Build URL with query params
@@ -147,7 +149,9 @@ export class KalshiClient {
       return headers;
     };
 
-    return executeWithRetry<T>(method, url, buildHeaders, opts?.body);
+    return executeWithRetry<T>(method, url, buildHeaders, opts?.body, opts?.signal ? {
+      signal: opts.signal
+    } : undefined);
   }
 
   async getExchangeStatus(): Promise<GetExchangeStatusResponse> {
@@ -158,13 +162,41 @@ export class KalshiClient {
     );
   }
 
-  async getMarkets(params?: GetMarketsParams): Promise<GetMarketsResponse> {
+  async getMarkets(
+    params?: GetMarketsParams,
+    options?: { signal?: AbortSignal }
+  ): Promise<GetMarketsResponse> {
     return this.request<GetMarketsResponse>("GET", "/markets", {
       ...(params
         ? { params: params as Record<string, string | number | undefined> }
         : {}),
       requireAuth: false,
+      ...(options?.signal ? { signal: options.signal } : {}),
     });
+  }
+
+  async *paginateMarkets(
+    params?: GetMarketsParams,
+    options?: { signal?: AbortSignal }
+  ): AsyncGenerator<KalshiRawMarket[]> {
+    let cursor = params?.cursor;
+
+    while (true) {
+      const requestParams = cursor === undefined ? params : { ...params, cursor };
+      const response = await this.getMarkets(requestParams, options);
+
+      if (response.markets.length === 0) {
+        return;
+      }
+
+      yield response.markets;
+
+      if (!response.cursor) {
+        return;
+      }
+
+      cursor = response.cursor;
+    }
   }
 
   async getMarket(ticker: string): Promise<GetMarketResponse> {
